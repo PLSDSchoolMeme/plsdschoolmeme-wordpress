@@ -1,6 +1,10 @@
 NextGEN Gallery
 by Imagely
 
+= V3.11  - 05.26.2021
+* Fixed:   Now compatible with NimbleBuilder
+* Fixed:   Importing images from the Media Library was broken due to a z-index issue
+
 = V3.10  - 05.19.2021
 * NEW:     Added option under Misc Options to disable the /ngg_tag/ page feature
 * Fixed:   Misc performance improvements to NGG 3.9.0
