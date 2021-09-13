@@ -1,10 +1,10 @@
 === WP Increase Upload Filesize | Increase Maximum Execution Time ===
 Contributors: codepopular, shamimtpi
-Tags: max upload file size, increase upload limit, increase file size limit, upload limit, post max size, upload file size, upload_max_filesize
+Tags: max upload file size, increase upload limit, increase file size limit, upload limit, post max size, upload file size, upload_max_filesize, Increase Maximum Execution Time
 Requires at least: 3.0
 Requires PHP: 5.6
-Tested up to: 5.7
-Stable tag: 1.0.5
+Tested up to: 5.8
+Stable tag: 1.0.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,12 +13,15 @@ Increase maximum upload file size limit to any value. Increase upload limit - up
 
 == Description==
 
-**Increase upload file size limit to any value with one click.**
+### **Increase upload file size limit to any value with one click.**
 Plugin automatically detects upload limits set by WordPress and by the server / hosting provider, and displays them.
 
 Access plugin's settings from the main WP admin menu.
 
 You can easily increase maximum upload file size. And also you can increase WordPress maximum execution time. some time extended maximum execution time when upload any attachment. From now with this plugin you can simply avoid this problem.
+
+### **Increase Maximum Execution Time.**
+Some time WordPress user can't upload new file with media due to extended execution time. With this plugin you can increase the execution time to avoid these issue. You need to set the execution time in input filed to set your own execution time according to your need.
 
 == Installation ==
 
@@ -38,11 +41,14 @@ Or if needed, install manually;
 
 
 == Screenshots ==
-
-1. Increase maximum file upload size with one click
+1. Admin Panel for maximum upload file size.
 
 
 == Changelog ==
+
+1.0.6
+-------------
+* WordPress latest versoin 5.8 compatibility added.
 
 1.0.5
 -------------

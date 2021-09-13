@@ -105,8 +105,8 @@
 
 			// jquery-confirm defaults.
 			jconfirm.defaults = {
-				closeIcon: true,
-				backgroundDismiss: true,
+				closeIcon: false,
+				backgroundDismiss: false,
 				escapeKey: true,
 				animationBounce: 1,
 				useBootstrap: false,
@@ -271,8 +271,6 @@
 				$.confirm({
 					title: false,
 					content: msg,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -321,8 +319,6 @@
 				$.confirm({
 					title: false,
 					content: wpforms_admin.entry_delete_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -399,8 +395,6 @@
 				$.confirm({
 					title: false,
 					content: wpforms_admin.entry_note_delete_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -496,8 +490,6 @@
 				$.confirm( {
 					title: false,
 					content: wpforms_admin.entry_delete_n_confirm.replace( '{entry_count}', $checked.length ),
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -529,8 +521,6 @@
 				$.confirm({
 					title: false,
 					content: wpforms_admin.entry_delete_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -640,8 +630,6 @@
 				$.confirm( {
 					title: wpforms_admin.heads_up,
 					content: filteredCount && $( '#wpforms-reset-filter' ).length ? wpforms_admin.entry_delete_n_confirm.replace( '{entry_count}', filteredCount ) : wpforms_admin.entry_delete_all_confirm,
-					backgroundDismiss: false,
-					closeIcon: false,
 					icon: 'fa fa-exclamation-circle',
 					type: 'orange',
 					buttons: {
@@ -716,15 +704,19 @@
 						.append( '<tr class="new-entries-notification"><td colspan="' + columnCount + '"><a href=""></a></td></tr>' );
 				}
 
-				$entriesList.find( '.new-entries-notification a' )
+				var $link = $entriesList.find( '.new-entries-notification a' );
+
+				$link
 					.text( data.wpforms_new_entries_notification )
 					.slideDown( {
-						duration: 500,
-						start   : function () {
-							$( this ).css( {
-								display: 'block'
-							} );
-						}
+						start: function() {
+
+							$link.css( 'display', 'block' );
+						},
+						always: function() {
+
+							$link.css( 'display', 'block' );
+						},
 					} );
 			} );
 		},
@@ -1315,8 +1307,6 @@
 			$.alert({
 				title: wpforms_admin.heads_up,
 				content: msg,
-				backgroundDismiss: false,
-				closeIcon: false,
 				icon: 'fa fa-exclamation-circle',
 				type: 'orange',
 				buttons: {
@@ -1630,8 +1620,6 @@
 			$.confirm( {
 				title: wpforms_admin.heads_up,
 				content: wpforms_admin.provider_delete_confirm,
-				backgroundDismiss: false,
-				closeIcon: false,
 				icon: 'fa fa-exclamation-circle',
 				type: 'orange',
 				buttons: {

@@ -4,8 +4,8 @@
  *
  * @since 1.6.7
  *
- * @var string $upgrade_link Upgrade link.
- * @var array  $addons       Addons data.
+ * @var string $upgrade_link_base Upgrade link base.
+ * @var array  $addons            Addons data.
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -18,24 +18,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php esc_html_e( 'WPForms Addons', 'wpforms-lite' ); ?>
 		<input type="search" placeholder="<?php esc_html_e( 'Search Addons', 'wpforms-lite' ); ?>" id="wpforms-admin-addons-search">
 	</h1>
-	<div class="notice notice-info" style="display: block;">
-		<p><strong><?php esc_html_e( 'Form Addons are a PRO feature.', 'wpforms-lite' ); ?></strong></p>
-		<p><?php esc_html_e( 'Please upgrade to the PRO plan to unlock them and more awesome features.', 'wpforms-lite' ); ?></p>
-		<p>
-			<a href="<?php echo esc_url( $upgrade_link ); ?>" class="wpforms-btn wpforms-btn-orange wpforms-btn-md wpforms-upgrade-modal" target="_blank" rel="noopener noreferrer">
-				<?php esc_html_e( 'Upgrade Now', 'wpforms-lite' ); ?>
-			</a>
-		</p>
-	</div>
 	<div class="wpforms-admin-content">
 		<div id="wpforms-admin-addons-list">
 			<div class="list">
 				<?php
 				foreach ( $addons as $addon ) :
 					$addon['icon']    = ! empty( $addon['icon'] ) ? $addon['icon'] : '';
-					$addon['url']     = ! empty( $addon['url'] ) ? $addon['url'] : 'https://wpforms.com/categories/docs/addons/';
 					$addon['title']   = ! empty( $addon['title'] ) ? $addon['title'] : __( 'Unknown Addon', 'wpforms-lite' );
 					$addon['excerpt'] = ! empty( $addon['excerpt'] ) ? $addon['excerpt'] : '';
+					$upgrade_link     = add_query_arg(
+						[
+							'utm_content' => $addon['title'],
+						],
+						$upgrade_link_base
+					);
 				?>
 					<div class="addon-container">
 						<div class="addon-item">
@@ -45,7 +41,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 									<?php
 									printf(
 										'<a href="%1$s" title="%2$s" target="_blank" rel="noopener noreferrer">%3$s</a>',
-										esc_url( $addon['url'] ),
+										esc_url( $upgrade_link ),
 										esc_attr__( 'Learn more', 'wpforms-lite' ),
 										esc_html( $addon['title'] )
 									);

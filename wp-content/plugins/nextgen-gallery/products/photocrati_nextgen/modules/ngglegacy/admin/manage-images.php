@@ -88,71 +88,8 @@ function nggallery_picturelist($controller)
     ?>
 
     <script type="text/javascript">
-        var $ = jQuery;
-
-        function showDialog(windowId, title) {
-            var form = document.getElementById('updategallery');
-            var elementlist = "";
-
-            for (var i = 0, n = form.elements.length; i < n; i++) {
-                if (form.elements[i].type === "checkbox") {
-                    if (form.elements[i].name === "doaction[]") {
-                        if (form.elements[i].checked === true) {
-                            if (elementlist === "") {
-                                elementlist = form.elements[i].value;
-                            } else {
-                                elementlist += "," + form.elements[i].value;
-                            }
-                        }
-                    }
-                }
-            }
-
-            $("#" + windowId + "_bulkaction").val($("#bulkaction").val());
-            $("#" + windowId + "_imagelist").val(elementlist);
-
-            // now show the dialog
-            $("#" + windowId).dialog({
-                width: 640,
-                resizable: false,
-                modal: true,
-                title: title,
-                position: {
-                    my: 'center',
-                    at: 'center',
-                    of: window.parent
-                }
-            });
-
-            $("#" + windowId + ' .dialog-cancel').on('click', function() {
-                $("#" + windowId).dialog("close");
-            });
-        }
-
-        function setURLParam(param, paramVal) {
-            var url        = window.location.href;
-            var params     = "";
-            var tmp        = "";
-            var tmpArray   = url.split("?");
-            var base       = tmpArray[0];
-            var additional = tmpArray[1];
-
-            if (additional) {
-                tmpArray = additional.split("&");
-                for (i = 0; i < tmpArray.length; i++) {
-                    if (tmpArray[i].split('=')[0] !== param) {
-                        params += tmp + tmpArray[i];
-                        tmp = "&";
-                    }
-                }
-            }
-
-            return base + "?" + params + tmp + "" + param + "=" + paramVal;
-        }
-
-        $(function() {
-
-            $('span.tooltip, label.tooltip').tooltip();
+		(function($) {
+            // $('span.tooltip, label.tooltip').tooltip();
 
             $('#ngg-manage-images-items-per-page').on('change', function() {
                 window.location.href = setURLParam('items', $(this).val());
@@ -224,103 +161,164 @@ function nggallery_picturelist($controller)
                     Frame_Event_Publisher.delete_cookie("X-Frame-Events_" + data.id);
                 }, 400);
             });
-        });
 
-        function checkAll(form) {
-            for (var i = 0, n = form.elements.length; i < n; i++) {
-                if (form.elements[i].type === "checkbox") {
-                    if (form.elements[i].name === "doaction[]") {
-                        if (form.elements[i].checked == true) {
-                            form.elements[i].checked = false;
-                        } else {
-                            form.elements[i].checked = true;
-                        }
-                    }
-                }
-            }
-        }
+			window.showDialog = function(windowId, title) {
+				var form = document.getElementById('updategallery');
+				var elementlist = "";
 
-        function getNumChecked(form) {
-            var num = 0;
-            for (var i = 0, n = form.elements.length; i < n; i++) {
-                if (form.elements[i].type === "checkbox") {
-                    if (form.elements[i].name === "doaction[]") {
-                        if (form.elements[i].checked === true) {
-                            num++;
-                        }
-                    }
-                }
-            }
-            return num;
-        }
+				for (var i = 0, n = form.elements.length; i < n; i++) {
+					if (form.elements[i].type === "checkbox") {
+						if (form.elements[i].name === "doaction[]") {
+							if (form.elements[i].checked === true) {
+								if (elementlist === "") {
+									elementlist = form.elements[i].value;
+								} else {
+									elementlist += "," + form.elements[i].value;
+								}
+							}
+						}
+					}
+				}
 
-        // this function check for a the number of selected images, sumbmit false when no one selected
-        function checkSelected() {
+				$("#" + windowId + "_bulkaction").val($("#bulkaction").val());
+				$("#" + windowId + "_imagelist").val(elementlist);
 
-            var numchecked = getNumChecked(document.getElementById('updategallery'));
+				// now show the dialog
+				$("#" + windowId).dialog({
+					width: 640,
+					resizable: false,
+					modal: true,
+					title: title,
+					position: {
+						my: 'center',
+						at: 'center',
+						of: window.parent
+					}
+				});
 
-            if (typeof document.activeElement == "undefined" && document.addEventListener) {
-                document.addEventListener("focus", function (e) {
-                    document.activeElement = e.target;
-                }, true);
-            }
+				$("#" + windowId + ' .dialog-cancel').on('click', function() {
+					$("#" + windowId).dialog("close");
+				});
+			}
 
-            if (document.activeElement.name === 'post_paged')
-                return true;
+			window.setURLParam = function(param, paramVal) {
+				var url        = window.location.href;
+				var params     = "";
+				var tmp        = "";
+				var tmpArray   = url.split("?");
+				var base       = tmpArray[0];
+				var additional = tmpArray[1];
 
-            if (numchecked < 1) {
-                alert('<?php echo esc_js(__('No images selected', 'nggallery')); ?>');
-                return false;
-            }
+				if (additional) {
+					tmpArray = additional.split("&");
+					for (i = 0; i < tmpArray.length; i++) {
+						if (tmpArray[i].split('=')[0] !== param) {
+							params += tmp + tmpArray[i];
+							tmp = "&";
+						}
+					}
+				}
 
-            var actionId = $('#bulkaction').val();
+				return base + "?" + params + tmp + "" + param + "=" + paramVal;
+			}
 
-            switch (actionId) {
-                case "copy_to":
-                    showDialog('selectgallery', '<?php echo esc_js(__('Copy image to...','nggallery')); ?>');
-                    return false;
-                    break;
-                case "move_to":
-                    showDialog('selectgallery', '<?php echo esc_js(__('Move image to...','nggallery')); ?>');
-                    return false;
-                    break;
-                case "add_tags":
-                    showDialog('entertags', '<?php echo esc_js(__('Add new tags','nggallery')); ?>');
-                    return false;
-                    break;
-                case "delete_tags":
-                    showDialog('entertags', '<?php echo esc_js(__('Delete tags','nggallery')); ?>');
-                    return false;
-                    break;
-                case "overwrite_tags":
-                    showDialog('entertags', '<?php echo esc_js(__('Overwrite','nggallery')); ?>');
-                    return false;
-                    break;
-                case "resize_images":
-                    showDialog('resize_images', '<?php echo esc_js(__('Resize images','nggallery')); ?>');
-                    return false;
-                    break;
-                case "new_thumbnail":
-                    showDialog('new_thumbnail', '<?php echo esc_js(__('Create new thumbnails','nggallery')); ?>');
-                    return false;
-                    break;
-            }
+			window.checkAll = function(form) {
+				for (var i = 0, n = form.elements.length; i < n; i++) {
+					if (form.elements[i].type === "checkbox") {
+						if (form.elements[i].name === "doaction[]") {
+							if (form.elements[i].checked == true) {
+								form.elements[i].checked = false;
+							} else {
+								form.elements[i].checked = true;
+							}
+						}
+					}
+				}
+			}
 
-            return confirm('<?php echo sprintf(esc_js(__("You are about to start the bulk edit for %s images \n \n 'Cancel' to stop, 'OK' to proceed.",'nggallery')), "' + numchecked + '") ; ?>');
-        }
+			window.getNumChecked = function(form) {
+				var num = 0;
+				for (var i = 0, n = form.elements.length; i < n; i++) {
+					if (form.elements[i].type === "checkbox") {
+						if (form.elements[i].name === "doaction[]") {
+							if (form.elements[i].checked === true) {
+								num++;
+							}
+						}
+					}
+				}
+				return num;
+			}
 
-        $(function() {
-            if ($(this).data('ready')) {
-                return;
-            }
+			// this function check for a the number of selected images, sumbmit false when no one selected
+			window.checkSelected = function() {
 
-            // close postboxes that should be closed
-            $('.if-js-closed').removeClass('if-js-closed')
-                              .addClass('closed');
-            postboxes.add_postbox_toggles('ngg-manage-gallery');
+				var numchecked = getNumChecked(document.getElementById('updategallery'));
 
-            $(this).data('ready', true);
-        });
+				if (typeof document.activeElement == "undefined" && document.addEventListener) {
+					document.addEventListener("focus", function (e) {
+						document.activeElement = e.target;
+					}, true);
+				}
+
+				if (document.activeElement.name === 'post_paged')
+					return true;
+
+				if (numchecked < 1) {
+					alert('<?php echo esc_js(__('No images selected', 'nggallery')); ?>');
+					return false;
+				}
+
+				var actionId = document.getElementById('bulkaction').value;
+
+				switch (actionId) {
+					case "copy_to":
+						showDialog('selectgallery', '<?php echo esc_js(__('Copy image to...','nggallery')); ?>');
+						return false;
+						break;
+					case "move_to":
+						showDialog('selectgallery', '<?php echo esc_js(__('Move image to...','nggallery')); ?>');
+						return false;
+						break;
+					case "add_tags":
+						showDialog('entertags', '<?php echo esc_js(__('Add new tags','nggallery')); ?>');
+						return false;
+						break;
+					case "delete_tags":
+						showDialog('entertags', '<?php echo esc_js(__('Delete tags','nggallery')); ?>');
+						return false;
+						break;
+					case "overwrite_tags":
+						showDialog('entertags', '<?php echo esc_js(__('Overwrite','nggallery')); ?>');
+						return false;
+						break;
+					case "resize_images":
+						showDialog('resize_images', '<?php echo esc_js(__('Resize images','nggallery')); ?>');
+						return false;
+						break;
+					case "new_thumbnail":
+						showDialog('new_thumbnail', '<?php echo esc_js(__('Create new thumbnails','nggallery')); ?>');
+						return false;
+						break;
+				}
+
+				return confirm('<?php echo sprintf(esc_js(__("You are about to start the bulk edit for %s images \n \n 'Cancel' to stop, 'OK' to proceed.",'nggallery')), "' + numchecked + '") ; ?>');
+			}
+
+			if ($(this).data('ready')) {
+				return;
+			}
+
+			// close postboxes that should be closed
+			$('.if-js-closed').removeClass('if-js-closed').addClass('closed');
+
+			// Some third party plugins alter when postboxes are enqueued, so give this line a second to wait for it to be available
+			setTimeout(function() {
+				postboxes.add_postbox_toggles('ngg-manage-gallery');
+			}, 1000);
+
+			$(this).data('ready', true);
+        })(jQuery);
     </script>
 
     <?php if ($action_status['message'] != '') { ?>

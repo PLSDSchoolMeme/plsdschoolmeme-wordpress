@@ -1,4 +1,4 @@
-/* global wpforms_settings, grecaptcha, hcaptcha, wpformsRecaptchaCallback, wpforms_validate, wpforms_datepicker, wpforms_timepicker, Mailcheck, Choices, WPFormsPasswordField */
+/* global wpforms_settings, grecaptcha, hcaptcha, wpformsRecaptchaCallback, wpforms_validate, wpforms_datepicker, wpforms_timepicker, Mailcheck, Choices, WPFormsPasswordField, punycode */
 
 'use strict';
 
@@ -166,7 +166,18 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 
 				// Validate email addresses.
 				$.validator.methods.email = function( value, element ) {
-					return this.optional( element ) || /^[a-z0-9.!#$%&'*+\/=?^_`{|}~-]+@((?=[a-z0-9-]{1,63}\.)(xn--)?[a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,63}$/i.test( value );
+
+					// Test email on the multiple @ and spaces:
+					// - no spaces allowed in the local and domain parts
+					// - only one @ after the local part allowed
+					var structureTest = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( value );
+
+					// Test emails on the multiple dots:
+					// - start and finish with dot not allowed
+					// - two dots in a row not allowed
+					var dotsTest = /^(?!\.)(?!.*?\.\.).*[^.]$/.test( value );
+
+					return this.optional( element ) || ( structureTest && dotsTest );
 				};
 
 				// Validate email by allowlist/blocklist.
@@ -794,7 +805,11 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 				$input.mailcheck( {
 					suggested: function( $el, suggestion ) {
 
-						suggestion = '<a href="#" class="mailcheck-suggestion" data-id="' + id + '" title="' + wpforms_settings.val_email_suggestion_title + '">' + suggestion.full + '</a>';
+						if ( suggestion.domain.match( /^xn--/ ) ) {
+							suggestion.full = suggestion.address + '@' + punycode.toUnicode( suggestion.domain );
+						}
+
+						suggestion = '<a href="#" class="mailcheck-suggestion" data-id="' + id + '" title="' + wpforms_settings.val_email_suggestion_title + '">' + decodeURI( suggestion.full.replace( /%[^a-z0-9]/gi, '%25' ) ) + '</a>';
 						suggestion = wpforms_settings.val_email_suggestion.replace( '{suggestion}', suggestion );
 
 						$el.closest( '.wpforms-field' ).find( '#' + id + '_suggestion' ).remove();
@@ -1150,6 +1165,86 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 
 				return /^[-0-9.]+$/.test( String.fromCharCode( e.keyCode || e.which ) );
 			} );
+
+			$( document ).on( 'wpformsBeforePageChange', app.entryPreviewFieldPageChange );
+		},
+
+		/**
+		 * Entry preview field callback for a page changing.
+		 *
+		 * @since 1.6.9
+		 *
+		 * @param {Event} event Event.
+		 * @param {int} currentPage Current page.
+		 * @param {jQuery} $form Current form.
+		 */
+		entryPreviewFieldPageChange: function( event, currentPage, $form ) {
+
+			if ( ! $( event.target ).hasClass( 'wpforms-page-next' ) ) {
+				return;
+			}
+
+			app.entryPreviewFieldUpdate( currentPage, $form );
+		},
+
+		/**
+		 * Update the entry preview fields on the page.
+		 *
+		 * @since 1.6.9
+		 *
+		 * @param {int} currentPage Current page.
+		 * @param {jQuery} $form Current form.
+		 */
+		entryPreviewFieldUpdate: function( currentPage, $form ) {
+
+			var $entryPreviewField = $form.find( '.wpforms-page-' + currentPage + ' .wpforms-field-entry-preview' );
+
+			if ( ! $entryPreviewField.length ) {
+				return;
+			}
+
+			var entryPreviewId        = $entryPreviewField.data( 'field-id' ),
+				$fieldUpdatingMessage = $entryPreviewField.find( '.wpforms-entry-preview-updating-message' ),
+				$fieldNotice          = $entryPreviewField.find( '.wpforms-entry-preview-notice' ),
+				$fieldWrapper         = $entryPreviewField.find( '.wpforms-entry-preview-wrapper' ),
+				formData              = new FormData( $form.get( 0 ) );
+
+			formData.append( 'action', 'wpforms_get_entry_preview' );
+			formData.append( 'current_entry_preview_id', entryPreviewId );
+
+			$.ajax( {
+				data: formData,
+				type: 'post',
+				url: wpforms_settings.ajaxurl,
+				dataType: 'json',
+
+				// Disable processData and contentType to pass formData is an object.
+				processData: false,
+				contentType: false,
+				beforeSend: function() {
+					$entryPreviewField.addClass( 'wpforms-field-entry-preview-updating' );
+					$fieldNotice.hide();
+					$fieldWrapper.hide();
+					$fieldUpdatingMessage.show();
+				},
+				success: function( response ) {
+
+					if ( ! response.data ) {
+						$entryPreviewField.hide();
+
+						return;
+					}
+
+					$fieldWrapper.html( response.data );
+					$entryPreviewField.show();
+				},
+				complete: function() {
+					$entryPreviewField.removeClass( 'wpforms-field-entry-preview-updating' );
+					$fieldUpdatingMessage.hide();
+					$fieldNotice.show();
+					$fieldWrapper.show();
+				},
+			} );
 		},
 
 		/**
@@ -1249,6 +1344,9 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 				// Move to the next page.
 				if ( valid ) {
 					page2 = next;
+
+					$this.trigger( 'wpformsBeforePageChange', [ page2, $form ] );
+
 					$page.hide();
 					var $nextPage = $form.find( '.wpforms-page-' + next );
 					$nextPage.show();
@@ -1261,12 +1359,16 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 						// Scroll to top of the form.
 						app.animateScrollTop( $form.offset().top - pageScroll, 750 );
 					}
+
 					$this.trigger( 'wpformsPageChange', [ page2, $form ] );
 				}
 			} else if ( 'prev' === action ) {
 
 				// Move to the prev page.
 				page2 = prev;
+
+				$this.trigger( 'wpformsBeforePageChange', [ page2, $form ] );
+
 				$page.hide();
 				$form.find( '.wpforms-page-' + prev ).show();
 				$reCAPTCHA.hide();
@@ -1276,6 +1378,7 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 					// Scroll to the top of the form.
 					app.animateScrollTop( $form.offset().top - pageScroll );
 				}
+
 				$this.trigger( 'wpformsPageChange', [ page2, $form ] );
 			}
 
@@ -1372,7 +1475,7 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 		//--------------------------------------------------------------------//
 
 		/**
-		 * Payments: Calculate total.
+		 * Payments: Run amount calculation and update the Total field value.
 		 *
 		 * @since 1.2.3
 		 * @since 1.5.1 Added support for payment-checkbox field.
@@ -1384,32 +1487,11 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 
 			validate = validate || false;
 
-			var $form = $( el ).closest( '.wpforms-form' ),
-				total = 0,
+			var $form    = $( el ).closest( '.wpforms-form' ),
+				currency = app.getCurrency(),
+				total    = app.amountTotalCalc( $form ),
 				totalFormatted,
-				totalFormattedSymbol,
-				currency = app.getCurrency();
-
-			$( '.wpforms-payment-price', $form ).each( function( index, el ) {
-
-				var amount = 0,
-					$this = $( this );
-
-				if ( $this.closest( '.wpforms-field-payment-single' ).hasClass( 'wpforms-conditional-hide' ) ) {
-					return;
-				}
-				if ( 'text' === $this.attr( 'type' ) || 'hidden' === $this.attr( 'type' ) ) {
-					amount = $this.val();
-				} else if ( ( 'radio' === $this.attr( 'type' ) || 'checkbox' === $this.attr( 'type' ) ) && $this.is( ':checked' ) ) {
-					amount = $this.data( 'amount' );
-				} else if ( $this.is( 'select' ) && $this.find( 'option:selected' ).length > 0 ) {
-					amount = $this.find( 'option:selected' ).data( 'amount' );
-				}
-				if ( ! app.empty( amount ) ) {
-					amount = app.amountSanitize( amount );
-					total = Number( total ) + Number( amount );
-				}
-			} );
+				totalFormattedSymbol;
 
 			totalFormatted = app.amountFormat( total );
 
@@ -1429,6 +1511,46 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 					$( this ).text( totalFormattedSymbol );
 				}
 			} );
+		},
+
+		/**
+		 * Payments: Calculate a total amount without formatting.
+		 *
+		 * @since 1.6.7.1
+		 *
+		 * @param {jQuery} $form Form element.
+		 *
+		 * @returns {number} Total amount.
+		 */
+		amountTotalCalc: function( $form ) {
+
+			var total = 0;
+
+			$( '.wpforms-payment-price', $form ).each( function() {
+
+				var amount = 0,
+					$this  = $( this ),
+					type   = $this.attr( 'type' );
+
+				if ( $this.closest( '.wpforms-field-payment-single' ).hasClass( 'wpforms-conditional-hide' ) ) {
+					return;
+				}
+
+				if ( type === 'text' || type === 'hidden' ) {
+					amount = $this.val();
+				} else if ( ( type === 'radio' || type === 'checkbox' ) && $this.is( ':checked' ) ) {
+					amount = $this.data( 'amount' );
+				} else if ( $this.is( 'select' ) && $this.find( 'option:selected' ).length > 0 ) {
+					amount = $this.find( 'option:selected' ).data( 'amount' );
+				}
+
+				if ( ! app.empty( amount ) ) {
+					amount = app.amountSanitize( amount );
+					total  = Number( total ) + Number( amount );
+				}
+			} );
+
+			return total;
 		},
 
 		/**
@@ -1464,7 +1586,7 @@ var wpforms = window.wpforms || ( function( document, window, $ ) {
 		 *
 		 * @since 1.2.6
 		 *
-		 * @param {string} amount Amount to format.
+		 * @param {string|number} amount Amount to format.
 		 *
 		 * @returns {string} Formatted amount.
 		 */
