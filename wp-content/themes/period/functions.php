@@ -166,17 +166,30 @@ if ( ! function_exists( 'ct_period_update_fields' ) ) {
 	function ct_period_update_fields( $fields ) {
 
 		$commenter = wp_get_current_commenter();
-		$req = get_option( 'require_name_email' );
-		$aria_req = ( $req ? " aria-required='true'" : '' );
-		$fields =  array(
-			'author' => '<p class="comment-form-author">' . '<label for="author">' . __( 'Name' ) . '</label> ' . ( $req ? '<span class="required">*</span>' : '' ) .
-				'<input id="author" name="author" type="text" value="' . esc_attr( $commenter['comment_author'] ) . '" size="30"' . $aria_req . ' /></p>',
-			'email'  => '<p class="comment-form-email"><label for="email">' . __( 'Email' ) . '</label> ' . ( $req ? '<span class="required">*</span>' : '' ) .
-				'<input id="email" name="email" type="text" value="' . esc_attr(  $commenter['comment_author_email'] ) . '" size="30"' . $aria_req . ' /></p>',
-		);
-		$comments_args = array(
-			'fields' =>  $fields
-		);
+		$req       = get_option( 'require_name_email' );
+		$label     = $req ? '*' : ' ' . esc_html__( '(optional)', 'period' );
+		$aria_req  = $req ? "aria-required='true'" : '';
+
+		$fields['author'] =
+			'<p class="comment-form-author">
+	            <label for="author">' . esc_html_x( "Name", "noun", "period" ) . $label . '</label>
+	            <input id="author" name="author" type="text" placeholder="' . esc_attr__( "Jane Doe", "period" ) . '" value="' . esc_attr( $commenter['comment_author'] ) .
+			'" size="30" ' . $aria_req . ' />
+	        </p>';
+
+		$fields['email'] =
+			'<p class="comment-form-email">
+	            <label for="email">' . esc_html_x( "Email", "noun", "period" ) . $label . '</label>
+	            <input id="email" name="email" type="email" placeholder="' . esc_attr__( "name@email.com", "period" ) . '" value="' . esc_attr( $commenter['comment_author_email'] ) .
+			'" size="30" ' . $aria_req . ' />
+	        </p>';
+
+		$fields['url'] =
+			'<p class="comment-form-url">
+	            <label for="url">' . esc_html__( "Website", "period" ) . '</label>
+	            <input id="url" name="url" type="url" placeholder="http://google.com" value="' . esc_attr( $commenter['comment_author_url'] ) .
+			'" size="30" />
+	            </p>';
 
 		return $fields;
 	}
@@ -333,6 +346,7 @@ if ( ! function_exists( 'ct_period_social_array' ) ) {
 			'twitter'       => 'period_twitter_profile',
 			'facebook'      => 'period_facebook_profile',
 			'instagram'     => 'period_instagram_profile',
+			'tiktok'     	=> 'period_tiktok_profile',
 			'linkedin'      => 'period_linkedin_profile',
 			'pinterest'     => 'period_pinterest_profile',
 			'youtube'       => 'period_youtube_profile',
